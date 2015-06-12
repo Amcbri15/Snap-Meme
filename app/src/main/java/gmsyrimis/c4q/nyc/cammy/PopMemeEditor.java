@@ -40,19 +40,21 @@ public class PopMemeEditor extends Activity {
     public static String TOP_TEXT_KEY = "top";
     private String bottomText = "";
     public static String BOTTOM_TEXT_KEY = "bottom";
+    // Anthony's suggested variable
+    private String mCurrentPhotoPath;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pop_meme_editor);
-        // FINDING VIEWS
+        // Setting views to ids
         ivCustomPopular = (ImageView) findViewById(R.id.iv_custom_popular);
         bottomRow = (EditText) findViewById(R.id.bottom_pop);
         topRow = (EditText) findViewById(R.id.top_pop);
         shareBt = (Button) findViewById(R.id.bt_share_popo);
         saveBt = (Button) findViewById(R.id.bt_save_popo);
         linearPopLayout = (LinearLayout) findViewById(R.id.linear_pop_layout);
-        // LOADING
+        // Loading image uri from previous activity
         if (savedInstanceState == null) {
             imageUri = getIntent().getExtras().getString(IMAGE_URI_KEY);
             topText = "";
@@ -62,7 +64,7 @@ public class PopMemeEditor extends Activity {
             topText = savedInstanceState.getString(TOP_TEXT_KEY);
             bottomText = savedInstanceState.getString(BOTTOM_TEXT_KEY);
         }
-        // SETTING
+        // Setting text to image
         topRow.setText(topText);
         bottomRow.setText(bottomText);
         int popId = Integer.parseInt(imageUri);
@@ -99,6 +101,42 @@ public class PopMemeEditor extends Activity {
         // TODO SHARE BUTTON AND SAVE BUTTON
 
     }
+    // Create an image file name for use when saving image for sharing
+    private File createImageFile() throws IOException {
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+        File storageDir = Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(
+                imageFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+
+        // Save a file: path for use with ACTION_SEND intent
+        mCurrentPhotoPath = "file:" + image.getAbsolutePath();
+        return image;
+    }
+
+    // Method to share an image via social networks
+    public void shareVia(Bitmap mBitmap) {
+        Intent share = new Intent(Intent.ACTION_SEND);
+        share.setType("image/jpeg");
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        mBitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
+        File f;
+        try {
+            f = createImageFile();
+            FileOutputStream fo = new FileOutputStream(f);
+            fo.write(bytes.toByteArray());
+            fo.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        share.putExtra(Intent.EXTRA_STREAM, Uri.parse(mCurrentPhotoPath));
+        startActivity(Intent.createChooser(share, "Share Image"));
+    }
+
 
     public static Bitmap screenView(View v, int width, int height) {
         Bitmap screenshot = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
@@ -142,20 +180,6 @@ public class PopMemeEditor extends Activity {
         mediaScanIntent.setData(resultUri);
         this.sendBroadcast(mediaScanIntent);
     }
-
-//    public void process(View view){
-//        if(view.getId() == R.id.sendImage){
-//            Uri imageUri = Uri.parse("android.resource://com.example.android.implicitintentexample/drawable" + R.mipmap.ic_launcher);
-//            intent = new Intent(Intent.ACTION_SEND);
-//            intent.setType("image/*");
-//            intent.putExtra(Intent.EXTRA_STREAM,imageUri);
-//            intent.putExtra(Intent.EXTRA_TEXT,"Hey I have attached this picture");
-//            chooser = Intent.createChooser(intent,"Send Picture");
-//            startActivity(chooser);
-//        }
-    //}
-
-
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
