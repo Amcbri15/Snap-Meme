@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -33,16 +34,18 @@ public class PopMemeEditor extends Activity {
     private Button shareBt;
     private Button saveBt;
     private LinearLayout linearPopLayout;
+
     // KEY VALUE PAIRS
-    private String imageUri = "";
+    private Uri imageUri;
     public static String IMAGE_URI_KEY = "uri";
     private String topText = "";
     public static String TOP_TEXT_KEY = "top";
     private String bottomText = "";
     public static String BOTTOM_TEXT_KEY = "bottom";
-    // Anthony's suggested variable
+    // Anthony's added variable
     private String mCurrentPhotoPath;
-    private Uri bitmapUri;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,13 +61,11 @@ public class PopMemeEditor extends Activity {
 
         // Loading image uri from previous activity as both a String and a Uri
         if (savedInstanceState == null) {
-            imageUri = getIntent().getExtras().getString(IMAGE_URI_KEY);
-            bitmapUri = getIntent().getData();
+            imageUri = Uri.parse(getIntent().getExtras().getString(IMAGE_URI_KEY));
             topText = "";
             bottomText = "";
         } else {
-            imageUri = savedInstanceState.getString(IMAGE_URI_KEY);
-            bitmapUri = Uri.parse(savedInstanceState.getString(IMAGE_URI_KEY));
+            imageUri = Uri.parse(savedInstanceState.getString(IMAGE_URI_KEY));
             topText = savedInstanceState.getString(TOP_TEXT_KEY);
             bottomText = savedInstanceState.getString(BOTTOM_TEXT_KEY);
         }
@@ -72,29 +73,9 @@ public class PopMemeEditor extends Activity {
         // Setting text to image
         topRow.setText(topText);
         bottomRow.setText(bottomText);
-        int popId = Integer.parseInt(imageUri);
+        int popId = Integer.parseInt(imageUri.toString());
         ivCustomPopular.setImageDrawable(getResources().getDrawable(popId));
-        // OLD SHARE BUTTON
-//        shareBt.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                Intent share = new Intent(Intent.ACTION_SEND);
-//                share.setType("image/jpeg");
-//                ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-//                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
-//                File f = new File(Environment.getExternalStorageDirectory() + File.separator + "temporary_file.jpg");
-//                try {
-//                    f.createNewFile();
-//                    FileOutputStream fo = new FileOutputStream(f);
-//                    fo.write(bytes.toByteArray());
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//                share.putExtra(Intent.EXTRA_STREAM, Uri.parse("file:///sdcard/temporary_file.jpg"));
-//                startActivity(Intent.createChooser(share, "Share Image"));
-//
-//            }
-//        });
+
 
         shareBt.setOnClickListener(new View.OnClickListener() {
 
@@ -112,7 +93,8 @@ public class PopMemeEditor extends Activity {
             }
         });
 
-        // TODO SHARE BUTTON AND SAVE BUTTON
+        // TODO: Pass correct data to the share function.
+        // TODO: Consider combining save and share into one function.
 
     }
     // Create an image file name for use when saving image for sharing
@@ -132,20 +114,19 @@ public class PopMemeEditor extends Activity {
         return image;
     }
 
-    // Method to share an image via social networks
-    public void shareVia(String imageUri) {
-        bitmapUri = Uri.parse(imageUri);
+    // Method to share an image via social networks.
+    public void shareVia(Uri imageUri) {
         Intent share = new Intent(Intent.ACTION_SEND);
         share.setType("image/jpeg");
         try {
-            bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), bitmapUri);
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
-        File f;
-        try {
+            bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri);
+            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
+
+
+
+             File f;
+
             f = createImageFile();
             FileOutputStream fo = new FileOutputStream(f);
             fo.write(bytes.toByteArray());
@@ -153,7 +134,7 @@ public class PopMemeEditor extends Activity {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        share.putExtra(Intent.EXTRA_STREAM, Uri.parse(mCurrentPhotoPath));
+        share.putExtra(Intent.EXTRA_STREAM, Uri.parse(imageUri.toString()));
         startActivity(Intent.createChooser(share, "Share Image"));
     }
 
@@ -204,7 +185,7 @@ public class PopMemeEditor extends Activity {
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putString(IMAGE_URI_KEY, imageUri);
+        outState.putString(IMAGE_URI_KEY, imageUri.toString());
         outState.putString(TOP_TEXT_KEY, topText);
         outState.putString(BOTTOM_TEXT_KEY, bottomText);
     }
