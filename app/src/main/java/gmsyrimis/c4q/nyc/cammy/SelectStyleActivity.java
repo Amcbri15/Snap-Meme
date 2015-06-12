@@ -20,7 +20,8 @@ public class SelectStyleActivity extends Activity {
     ImageView chooseDemotivational;
     ImageView chooseVanilla;
 
-    private String imageUri = "";
+    // TODO: Change imgUri to Uri type and not String type. Fix any code that breaks as a result.
+    private String imageUri;
 
     public static String IMAGE_URI_KEY = "uri";
 
@@ -28,6 +29,8 @@ public class SelectStyleActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_select_style);
+
+        Intent getFromMain = getIntent();
 
         if (savedInstanceState == null) {
             Bundle bundle = getIntent().getExtras();

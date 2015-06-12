@@ -15,7 +15,7 @@ public class MainActivity extends Activity {
     ImageView gotoGallery;
     ImageView gotoPop;
     // KEY VALUE PAIRS
-    private String imageUri = "";
+    private Uri imageUri;
     public static String IMAGE_URI_KEY = "uri";
     // FLAGS
     private static final int CAMERA_REQUEST = 1;
@@ -44,7 +44,9 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 Intent capture = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                startActivityForResult(capture, CAMERA_REQUEST);
+                if (capture.resolveActivity(getPackageManager()) != null) {
+                    startActivityForResult(capture, CAMERA_REQUEST);
+                }
             }
         });
         // POPULAR MEMES BUTTON
@@ -66,15 +68,14 @@ public class MainActivity extends Activity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         try {
             if (requestCode == CAMERA_REQUEST && resultCode == RESULT_OK) {
-                Uri selectedImage = data.getData();
-                imageUri = selectedImage.toString();
+                imageUri = data.getData();
                 gotoSelectStyle();
             } else if (requestCode == SELECT_SINGLE_PICTURE && resultCode == RESULT_OK && null != data) {
-                Uri selectedImage = data.getData();
-                imageUri = selectedImage.toString();
+                imageUri = data.getData();
                 gotoSelectStyle();
             }
         } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

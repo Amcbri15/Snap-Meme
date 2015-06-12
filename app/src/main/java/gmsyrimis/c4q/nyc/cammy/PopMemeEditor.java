@@ -42,6 +42,7 @@ public class PopMemeEditor extends Activity {
     public static String BOTTOM_TEXT_KEY = "bottom";
     // Anthony's suggested variable
     private String mCurrentPhotoPath;
+    private Uri bitmapUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,40 +55,53 @@ public class PopMemeEditor extends Activity {
         shareBt = (Button) findViewById(R.id.bt_share_popo);
         saveBt = (Button) findViewById(R.id.bt_save_popo);
         linearPopLayout = (LinearLayout) findViewById(R.id.linear_pop_layout);
-        // Loading image uri from previous activity
+
+        // Loading image uri from previous activity as both a String and a Uri
         if (savedInstanceState == null) {
             imageUri = getIntent().getExtras().getString(IMAGE_URI_KEY);
+            bitmapUri = getIntent().getData();
             topText = "";
             bottomText = "";
         } else {
             imageUri = savedInstanceState.getString(IMAGE_URI_KEY);
+            bitmapUri = Uri.parse(savedInstanceState.getString(IMAGE_URI_KEY));
             topText = savedInstanceState.getString(TOP_TEXT_KEY);
             bottomText = savedInstanceState.getString(BOTTOM_TEXT_KEY);
         }
+
         // Setting text to image
         topRow.setText(topText);
         bottomRow.setText(bottomText);
         int popId = Integer.parseInt(imageUri);
         ivCustomPopular.setImageDrawable(getResources().getDrawable(popId));
         // OLD SHARE BUTTON
+//        shareBt.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                Intent share = new Intent(Intent.ACTION_SEND);
+//                share.setType("image/jpeg");
+//                ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+//                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
+//                File f = new File(Environment.getExternalStorageDirectory() + File.separator + "temporary_file.jpg");
+//                try {
+//                    f.createNewFile();
+//                    FileOutputStream fo = new FileOutputStream(f);
+//                    fo.write(bytes.toByteArray());
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//                share.putExtra(Intent.EXTRA_STREAM, Uri.parse("file:///sdcard/temporary_file.jpg"));
+//                startActivity(Intent.createChooser(share, "Share Image"));
+//
+//            }
+//        });
+
         shareBt.setOnClickListener(new View.OnClickListener() {
+
             @Override
             public void onClick(View view) {
-                Intent share = new Intent(Intent.ACTION_SEND);
-                share.setType("image/jpeg");
-                ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
-                File f = new File(Environment.getExternalStorageDirectory() + File.separator + "temporary_file.jpg");
-                try {
-                    f.createNewFile();
-                    FileOutputStream fo = new FileOutputStream(f);
-                    fo.write(bytes.toByteArray());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                share.putExtra(Intent.EXTRA_STREAM, Uri.parse("file:///sdcard/temporary_file.jpg"));
-                startActivity(Intent.createChooser(share, "Share Image"));
 
+                shareVia(imageUri);
             }
         });
 
@@ -119,11 +133,17 @@ public class PopMemeEditor extends Activity {
     }
 
     // Method to share an image via social networks
-    public void shareVia(Bitmap mBitmap) {
+    public void shareVia(String imageUri) {
+        bitmapUri = Uri.parse(imageUri);
         Intent share = new Intent(Intent.ACTION_SEND);
         share.setType("image/jpeg");
+        try {
+            bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), bitmapUri);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        mBitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
         File f;
         try {
             f = createImageFile();
